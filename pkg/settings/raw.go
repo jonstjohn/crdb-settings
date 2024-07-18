@@ -1,7 +1,7 @@
 package settings
 
 import (
-	releases_pkg "blatta/pkg/releases"
+	"github.com/jonstjohn/crdb-settings/pkg/releases"
 	"slices"
 	"time"
 )
@@ -29,7 +29,7 @@ var ignoreList = []string{"cluster.secret", "version"}
 type RawSettingsWithReleases []RawSettingWithRelease
 type RawSettingWithRelease struct {
 	RawSetting *RawSetting
-	Release    *releases_pkg.Release
+	Release    *releases.Release
 }
 
 type Meta struct {
@@ -135,19 +135,19 @@ func (rs *RawSettings) ReleaseNames() []string {
 
 // MetaForVariable takes a variable name and a set of releases then creates some meta data about the variable
 // across the raw settings which can be used for setting summaries
-func (rs *RawSettings) MetaForVariable(v string, releases releases_pkg.Releases) *Meta {
+func (rs *RawSettings) MetaForVariable(v string, rels releases.Releases) *Meta {
 
 	// Extract and sort rswr settings for single variable
 	rsv := rs.ForVariableOnly(v)
 	//rsv.Sort()
 
-	rswrs := NewRawSettingsWithReleases(*rsv, releases)
+	rswrs := NewRawSettingsWithReleases(*rsv, rels)
 	rswrs.SortByRelease()
 
 	names := rsv.ReleaseNames()
 
-	releasesForVariable := make(releases_pkg.Releases, 0)
-	for _, r := range releases {
+	releasesForVariable := make(releases.Releases, 0)
+	for _, r := range rels {
 		if !slices.Contains(names, r.Name) {
 			continue
 		}
@@ -249,9 +249,9 @@ func (rs *RawSettings) MetaForVariable(v string, releases releases_pkg.Releases)
 
 }
 
-func NewRawSettingsWithReleases(rawSettings RawSettings, releases releases_pkg.Releases) RawSettingsWithReleases {
-	m := make(map[string]*releases_pkg.Release)
-	for _, r := range releases {
+func NewRawSettingsWithReleases(rawSettings RawSettings, rels releases.Releases) RawSettingsWithReleases {
+	m := make(map[string]*releases.Release)
+	for _, r := range rels {
 		m[r.Name] = &r
 	}
 

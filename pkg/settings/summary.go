@@ -1,6 +1,6 @@
 package settings
 
-import "blatta/pkg/releases"
+import "github.com/jonstjohn/crdb-settings/pkg/releases"
 
 // Summary - create a summary of all the raw settings. Here is what we're interested in:
 // - variable name

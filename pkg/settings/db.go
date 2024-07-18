@@ -99,6 +99,25 @@ ORDER BY
 	settings_raw.memory_bytes
 `
 
+const SelectSettingsForVersionSql = `
+SELECT DISTINCT
+	settings_raw.release_name,
+	settings_raw.variable,
+	settings_raw.value,
+	settings_raw.type,
+	settings_raw.public,
+	settings_raw.description,
+	settings_raw.default_value,
+	settings_raw.origin,
+	settings_raw.key,
+	settings_raw.updated
+FROM
+	settings_raw
+WHERE
+	settings_raw.release_name = $1
+ORDER BY public DESC, variable ASC
+`
+
 const CreateSummaryTable = `
 CREATE TABLE settings_summary (
 	variable STRING NOT NULL PRIMARY KEY,
@@ -147,6 +166,47 @@ func NewDbDatasource(pool *pgxpool.Pool) *Db {
 	return &Db{
 		Pool: pool,
 	}
+}
+
+func (db *Db) GetSettingsForVersion(version string) (RawSettings, error) {
+	rows, err := db.Pool.Query(context.Background(), SelectSettingsForVersionSql, version)
+	if err != nil {
+		return nil, err
+	}
+
+	sets := make([]RawSetting, 0)
+
+	for rows.Next() {
+		var releaseName string
+		var variable string
+		var value string
+		var typ string
+		var public bool
+		var description string
+		var defaultValue string
+		var origin string
+		var key string
+		var updated time.Time
+		err := rows.Scan(&releaseName, &variable, &value, &typ, &public,
+			&description, &defaultValue, &origin, &key, &updated)
+		if err != nil {
+			return nil, err
+		}
+		sets = append(sets, RawSetting{
+			ReleaseName:  releaseName,
+			Variable:     variable,
+			Value:        value,
+			Type:         typ,
+			Public:       public,
+			Description:  description,
+			DefaultValue: defaultValue,
+			Origin:       origin,
+			Key:          key,
+			Updated:      updated,
+		})
+	}
+
+	return sets, nil
 }
 
 func (db *Db) GetRawSettings() (RawSettings, error) {

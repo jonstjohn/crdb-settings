@@ -1,11 +1,11 @@
 package settings
 
 import (
-	"blatta/pkg/dbpgx"
-	"blatta/pkg/host"
-	releasesdatasource "blatta/pkg/releases"
 	"fmt"
 	"github.com/cockroachdb/cockroach-go/v2/testserver"
+	"github.com/jonstjohn/crdb-settings/pkg/dbpgx"
+	"github.com/jonstjohn/crdb-settings/pkg/host"
+	"github.com/jonstjohn/crdb-settings/pkg/releases"
 	"github.com/sirupsen/logrus"
 	"os"
 	"path/filepath"
@@ -60,7 +60,7 @@ func SaveClusterSettingsForVersion(release string, url string) error {
 
 	rs := make([]string, 0)
 	if strings.HasPrefix(release, "recent-") {
-		rdb := releasesdatasource.NewDbDatasource(pool)
+		rdb := releases.NewDbDatasource(pool)
 		cntStr := strings.Replace(release, "recent-", "", 1)
 		cnt, err := strconv.Atoi(cntStr)
 		if err != nil {
@@ -128,7 +128,7 @@ func SummarizeAndSaveSettings(url string) error {
 		return err
 	}
 
-	relDs := releasesdatasource.NewDbDatasource(pool)
+	relDs := releases.NewDbDatasource(pool)
 	rels, err := relDs.GetReleases()
 	if err != nil {
 		return err
