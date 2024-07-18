@@ -9,6 +9,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var urlArg string
+
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "crdb-settings",
@@ -35,7 +37,7 @@ func init() {
 	// will be global for your application.
 
 	// rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.crdb-settings.yaml)")
-
+	rootCmd.PersistentFlags().StringVar(&urlArg, "url", "", "Database URL")
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
 	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
