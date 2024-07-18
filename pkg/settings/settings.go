@@ -41,6 +41,34 @@ func ClusterSettingsFromRelease(release string) ([]ClusterSetting, error) {
 	return settings, err
 }
 
+// SaveClusterSettings save all cluster settings for all versions, but only if the combination of
+// release, cpu and memory has not previously been run - otherwise it bails early
+func SaveClusterSettings(url string) error {
+	pool, err := dbpgx.NewPoolFromUrl(url)
+	//if err != nil {
+	//	return err
+	//}
+	//ds := NewDbDatasource(pool)
+
+	rdb := releases.NewDbDatasource(pool)
+	if err != nil {
+		return err
+	}
+	rs, err := rdb.GetRecentReleaseNames(999999)
+	if err != nil {
+		return err
+	}
+
+	for _, r := range rs {
+		err = SaveClusterSettingsForVersion(r, url)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 // SaveClusterSettingsForVersion saves all the cluster settings for a specific CRDB version, but only
 // if the combination of release, cpu and memory has not been previously run - otherwise it bails early.
 func SaveClusterSettingsForVersion(release string, url string) error {
