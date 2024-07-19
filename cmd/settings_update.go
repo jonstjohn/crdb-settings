@@ -5,20 +5,31 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var saveSettingsVersionFlag string
+var saveSettingsReleaseFlag string
 
 var settingsUpdateCmd = &cobra.Command{
-	Use:   "settings update",
+	Use:   "update",
 	Short: "Settings update command",
 	Run: func(cmd *cobra.Command, args []string) {
-		err := settings.SaveClusterSettingsForVersion(saveSettingsVersionFlag, urlArg)
+		s, err := settings.NewSettingsManager(urlArg)
 		if err != nil {
 			panic(err)
 		}
+		err = s.SaveClusterSettingsForVersion(saveSettingsReleaseFlag, urlArg)
+		if err != nil {
+			panic(err)
+		}
+		/*
+			err := settings.SaveClusterSettingsForVersion(saveSettingsReleaseFlag, urlArg)
+			if err != nil {
+				panic(err)
+			}
+
+		*/
 	},
 }
 
 func init() {
-	rootCmd.AddCommand(settingsUpdateCmd)
-	settingsUpdateCmd.Flags().StringVar(&saveSettingsVersionFlag, "version", "v23.2.1", "Specify a single CRDB version, starting with 'v'")
+	settingsCmd.AddCommand(settingsUpdateCmd)
+	settingsUpdateCmd.Flags().StringVar(&saveSettingsReleaseFlag, "release", "all", "Update all or specify a single CRDB release, starting with 'v'")
 }

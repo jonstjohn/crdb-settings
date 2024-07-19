@@ -1,16 +1,11 @@
 package settings
 
 import (
-	"fmt"
 	"github.com/cockroachdb/cockroach-go/v2/testserver"
 	"github.com/jonstjohn/crdb-settings/pkg/dbpgx"
-	"github.com/jonstjohn/crdb-settings/pkg/host"
 	"github.com/jonstjohn/crdb-settings/pkg/releases"
-	"github.com/sirupsen/logrus"
 	"os"
 	"path/filepath"
-	"strconv"
-	"strings"
 )
 
 func ClusterSettingsFromRelease(release string) ([]ClusterSetting, error) {
@@ -41,6 +36,7 @@ func ClusterSettingsFromRelease(release string) ([]ClusterSetting, error) {
 	return settings, err
 }
 
+/*
 // SaveClusterSettings save all cluster settings for all versions, but only if the combination of
 // release, cpu and memory has not previously been run - otherwise it bails early
 func SaveClusterSettings(url string) error {
@@ -69,6 +65,9 @@ func SaveClusterSettings(url string) error {
 	return nil
 }
 
+*/
+
+/*
 // SaveClusterSettingsForVersion saves all the cluster settings for a specific CRDB version, but only
 // if the combination of release, cpu and memory has not been previously run - otherwise it bails early.
 func SaveClusterSettingsForVersion(release string, url string) error {
@@ -87,7 +86,9 @@ func SaveClusterSettingsForVersion(release string, url string) error {
 	}
 
 	rs := make([]string, 0)
-	if strings.HasPrefix(release, "recent-") {
+	if release == "all" {
+
+	} else if strings.HasPrefix(release, "recent-") {
 		rdb := releases.NewDbDatasource(pool)
 		cntStr := strings.Replace(release, "recent-", "", 1)
 		cnt, err := strconv.Atoi(cntStr)
@@ -143,20 +144,20 @@ func SaveClusterSettingsForVersion(release string, url string) error {
 
 }
 
+*/
+
 // SummarizeSettings gets the raw settings and summarizes them into the settings_summary table
 func SummarizeAndSaveSettings(url string) error {
-	pool, err := dbpgx.NewPoolFromUrl(url)
+	rsDs, err := NewDbDatasource(url)
 	if err != nil {
 		return err
 	}
-
-	rsDs := NewDbDatasource(pool)
 	rawSettings, err := rsDs.GetRawSettings()
 	if err != nil {
 		return err
 	}
 
-	relDs := releases.NewDbDatasource(pool)
+	relDs := releases.NewDbDatasource(rsDs.Pool)
 	rels, err := relDs.GetReleases()
 	if err != nil {
 		return err

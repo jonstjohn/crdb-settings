@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/jonstjohn/crdb-settings/pkg/dbpgx"
 	"time"
 )
 
@@ -162,10 +163,14 @@ FROM save_runs
 WHERE release_name = $1 AND cpu = $2 AND memory_bytes = $3
 `
 
-func NewDbDatasource(pool *pgxpool.Pool) *Db {
+func NewDbDatasource(url string) (*Db, error) {
+	pool, err := dbpgx.NewPoolFromUrl(url)
+	if err != nil {
+		return nil, err
+	}
 	return &Db{
 		Pool: pool,
-	}
+	}, nil
 }
 
 func (db *Db) GetSettingsForVersion(version string) (RawSettings, error) {
