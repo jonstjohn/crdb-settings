@@ -132,3 +132,7 @@ func (sm *Manager) CompareSettingsForReleases(r1 string, r2 string) (ComparedRel
 	return CompareReleaseSettings(rs1, rs2), nil
 
 }
+
+func (sm *Manager) HistoryForSetting(setting string) (SettingHistory, error) {
+	return GenerateSettingHistory(ReleaseSettings{})
+}
