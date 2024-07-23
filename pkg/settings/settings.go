@@ -8,6 +8,21 @@ import (
 	"path/filepath"
 )
 
+type ReleaseSettings []ReleaseSetting
+
+type ReleaseSetting struct {
+	ReleaseName string `json:"release_name""`
+	Variable    string `json:"variable"`
+	Value       string `json:"value"`
+	Type        string `json:"type"`
+	Public      bool   `json:"public"`
+	Description string `json:"description"`
+}
+
+var IgnoredSettings = []string{
+	"cluster.secret",
+}
+
 func ClusterSettingsFromRelease(release string) ([]ClusterSetting, error) {
 	t, err := testserver.NewTestServer(
 		testserver.CustomVersionOpt(release))

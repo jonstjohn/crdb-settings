@@ -53,8 +53,9 @@ The REST API is defined via an OpenAPI spec and can be served via a web server.
 
 The following operations are supported:
 
-1. `/settings/list/version`
-2. `/settings/compare/version1..version2`
+1. `/settings/release/[release]`
+2. `/settings/compare/[release1]..[release2]`
+3. `/settings/history/[setting]`
 
 ### REST web server
 

@@ -19,7 +19,7 @@ var settingsListCmd = &cobra.Command{
 			panic(err)
 		}
 
-		sts, err := s.GetSettingsForVersion(listSettingsVersionFlag)
+		sts, err := s.GetSettingsForRelease(listSettingsVersionFlag)
 
 		if err != nil {
 			panic(err)
@@ -37,7 +37,7 @@ var settingsListCmd = &cobra.Command{
 				panic(err)
 			}
 			s := settings.NewDbDatasource(pool)
-			releases, err := s.GetSettingsForVersion(listSettingsVersionFlag)
+			releases, err := s.GetRawSettingsForVersion(listSettingsVersionFlag)
 			if err != nil {
 				panic(err)
 			}

@@ -9,7 +9,7 @@ var apiServeCmd = &cobra.Command{
 	Use:   "api serve",
 	Short: "Run a local test server and output the settings",
 	Run: func(cmd *cobra.Command, args []string) {
-		api.Serve()
+		api.Serve(urlArg)
 	},
 }
 

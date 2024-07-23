@@ -110,8 +110,7 @@ SELECT DISTINCT
 	settings_raw.description,
 	settings_raw.default_value,
 	settings_raw.origin,
-	settings_raw.key,
-	settings_raw.updated
+	settings_raw.key
 FROM
 	settings_raw
 WHERE
@@ -173,7 +172,7 @@ func NewDbDatasource(url string) (*Db, error) {
 	}, nil
 }
 
-func (db *Db) GetSettingsForVersion(version string) (RawSettings, error) {
+func (db *Db) GetRawSettingsForVersion(version string) (RawSettings, error) {
 	rows, err := db.Pool.Query(context.Background(), SelectSettingsForVersionSql, version)
 	if err != nil {
 		return nil, err
@@ -191,9 +190,8 @@ func (db *Db) GetSettingsForVersion(version string) (RawSettings, error) {
 		var defaultValue string
 		var origin string
 		var key string
-		var updated time.Time
 		err := rows.Scan(&releaseName, &variable, &value, &typ, &public,
-			&description, &defaultValue, &origin, &key, &updated)
+			&description, &defaultValue, &origin, &key)
 		if err != nil {
 			return nil, err
 		}
@@ -207,7 +205,6 @@ func (db *Db) GetSettingsForVersion(version string) (RawSettings, error) {
 			DefaultValue: defaultValue,
 			Origin:       origin,
 			Key:          key,
-			Updated:      updated,
 		})
 	}
 

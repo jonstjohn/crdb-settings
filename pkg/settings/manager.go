@@ -23,8 +23,23 @@ func NewSettingsManager(url string) (*Manager, error) {
 	return &Manager{Db: db}, err
 }
 
-func (sm *Manager) GetSettingsForVersion(version string) (RawSettings, error) {
-	return sm.Db.GetSettingsForVersion(version)
+func (sm *Manager) GetSettingsForRelease(version string) (ReleaseSettings, error) {
+	raws, err := sm.Db.GetRawSettingsForVersion(version)
+	s := make(ReleaseSettings, len(raws))
+	if err != nil {
+		return s, err // TODO
+	}
+	for i, raw := range raws {
+		s[i] = ReleaseSetting{
+			ReleaseName: raw.ReleaseName,
+			Variable:    raw.Variable,
+			Value:       raw.Value,
+			Type:        raw.Type,
+			Public:      raw.Public,
+			Description: raw.Description,
+		}
+	}
+	return s, nil
 }
 
 // SaveClusterSettingsForVersion saves all the cluster settings for a specific CRDB version, but only
@@ -101,4 +116,19 @@ func (sm *Manager) getReleasesNames(release string) ([]string, error) {
 	} else {
 		return []string{release}, nil
 	}
+}
+
+func (sm *Manager) CompareSettingsForReleases(r1 string, r2 string) (ComparedReleaseSettings, error) {
+	rs1, err := sm.GetSettingsForRelease(r1)
+	if err != nil {
+		return ComparedReleaseSettings{}, err
+	}
+
+	rs2, err := sm.GetSettingsForRelease(r2)
+	if err != nil {
+		return ComparedReleaseSettings{}, err
+	}
+
+	return CompareReleaseSettings(rs1, rs2), nil
+
 }
