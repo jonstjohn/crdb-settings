@@ -1,3 +1,7 @@
 runtime: go122
 service: api
 main: ./appengine
+handlers:
+  - url: /.*
+    http_headers:
+      Access-Control-Allow-Origin: *
