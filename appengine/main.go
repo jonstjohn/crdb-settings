@@ -1,6 +1,3 @@
-/*
-Copyright © 2024 NAME HERE <EMAIL ADDRESS>
-*/
 package main
 
 import (
@@ -8,20 +5,11 @@ import (
 	"cloud.google.com/go/secretmanager/apiv1/secretmanagerpb"
 	"context"
 	"fmt"
-	"github.com/jonstjohn/crdb-settings/cmd"
 	"github.com/jonstjohn/crdb-settings/pkg/api"
 	"log"
 	"net/http"
 	"os"
 )
-
-func main() {
-	cmd.Execute()
-}
-
-func indexHandler(w http.ResponseWriter, r *http.Request) {
-
-}
 
 func getDbUrl() (string, error) {
 	ctx := context.Background()
@@ -31,17 +19,19 @@ func getDbUrl() (string, error) {
 	}
 	defer c.Close()
 
-	name := fmt.Sprintf("projects/%s/CRDB_SETTINGS_DBURL/latest", os.Getenv("GOOGLE_CLOUD_PROJECT"))
+	name := fmt.Sprintf("projects/%s/secrets/CRDB_SETTINGS_DBURL/versions/latest", os.Getenv("GOOGLE_CLOUD_PROJECT"))
 
-	req := &secretmanagerpb.GetSecretRequest{Name: name}
-	secret, err := c.GetSecret(ctx, req)
+	//req := &secretmanagerpb.GetSecretRequest{Name: name}
+	req := &secretmanagerpb.AccessSecretVersionRequest{Name: name}
+	//secret, err := c.GetSecret(ctx, req)
+	secret, err := c.AccessSecretVersion(ctx, req)
 	if err != nil {
 		return "", err
 	}
-	return secret.String(), nil
+	return string(secret.Payload.Data), nil
 }
 
-func entry() {
+func main() {
 	url, err := getDbUrl()
 	if err != nil {
 		log.Fatal(err)
