@@ -130,6 +130,7 @@ func ErrorHandler(w http.ResponseWriter, err error) {
 }
 
 func (h *SettingsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	switch {
 	case r.Method == http.MethodGet && SettingsReleaseReWithRelease.MatchString(r.URL.Path):
 		h.ListSettingsForRelease(w, r)
