@@ -4,4 +4,4 @@ main: ./appengine
 handlers:
   - url: /.*
     http_headers:
-      Access-Control-Allow-Origin: *
+      Access-Control-Allow-Origin: "*"
