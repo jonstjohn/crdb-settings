@@ -41,7 +41,7 @@ func CompareReleaseSettings(rs1 ReleaseSettings, rs2 ReleaseSettings) ComparedRe
 			continue
 		}
 		if r2, ok := rs2indexed[r1.Variable]; ok {
-			if r1.Value != r2.Value || strings.TrimSpace(r1.Description) != strings.TrimSpace(r2.Description) {
+			if r1.Value != r2.Value || cleanDescription(r1.Description) != cleanDescription(r2.Description) {
 				changed = append(changed, ChangedSetting{Before: r1, After: r2})
 				continue
 			}
@@ -63,4 +63,8 @@ func CompareReleaseSettings(rs1 ReleaseSettings, rs2 ReleaseSettings) ComparedRe
 		Added:   added,
 		Changed: changed,
 	}
+}
+
+func cleanDescription(desc string) string {
+	return strings.Trim(strings.TrimSpace(desc), ".")
 }
