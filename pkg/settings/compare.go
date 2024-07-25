@@ -36,9 +36,10 @@ func CompareReleaseSettings(rs1 ReleaseSettings, rs2 ReleaseSettings) ComparedRe
 		if _, ok := rs2indexed[r1.Variable]; !ok { // exists in r1 but not r2
 			added = append(removed, r1)
 		}
-		r2 := rs2indexed[r1.Variable]
-		if r1.Value != r2.Value || r1.Description != r2.Description {
-			changed = append(changed, ChangedSetting{Before: r1, After: r2})
+		if r2, ok := rs2indexed[r1.Variable]; ok {
+			if r1.Value != r2.Value || r1.Description != r2.Description {
+				changed = append(changed, ChangedSetting{Before: r1, After: r2})
+			}
 		}
 	}
 
