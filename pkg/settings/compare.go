@@ -1,6 +1,9 @@
 package settings
 
-import "slices"
+import (
+	"slices"
+	"strings"
+)
 
 type ChangedSettings []ChangedSetting
 
@@ -34,11 +37,13 @@ func CompareReleaseSettings(rs1 ReleaseSettings, rs2 ReleaseSettings) ComparedRe
 			continue
 		}
 		if _, ok := rs2indexed[r1.Variable]; !ok { // exists in r1 but not r2
-			added = append(removed, r1)
+			removed = append(removed, r1)
+			continue
 		}
 		if r2, ok := rs2indexed[r1.Variable]; ok {
-			if r1.Value != r2.Value || r1.Description != r2.Description {
+			if r1.Value != r2.Value || strings.TrimSpace(r1.Description) != strings.TrimSpace(r2.Description) {
 				changed = append(changed, ChangedSetting{Before: r1, After: r2})
+				continue
 			}
 		}
 	}
@@ -49,6 +54,7 @@ func CompareReleaseSettings(rs1 ReleaseSettings, rs2 ReleaseSettings) ComparedRe
 		}
 		if _, ok := rs1indexed[r2.Variable]; !ok { // exists in r2 but not r1
 			added = append(added, r2)
+			continue
 		}
 	}
 
