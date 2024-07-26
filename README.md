@@ -5,7 +5,6 @@ multiple releases. It provides the following:
 
 1. Discover new versions of CockroachDB and store default cluster settings
 2. Serve a REST API for examining settings
-3. Deploy a web application for exploring settings (coming soon)
 
 ## Command-line
 
@@ -55,7 +54,6 @@ The following operations are supported:
 
 1. `/settings/release/[release]`
 2. `/settings/compare/[release1]..[release2]`
-3. `/settings/history/[setting]` (coming soon)
 
 ### REST web server
 
@@ -77,12 +75,12 @@ App engine must have access to the secret `CRDB_SETTINGS_DBURL` in the project.
 
 The current deployment uses Google Cloud Build to automatically deploy on push (dev) or tag (prod).
 
-## Web Application
+## Public Access
 
-The web application is written in ReactJS.
+To access the tool without needing to do any installation, the REST API and a web application is exposed via public URLs.
 
-To deploy the web application:
+Web application: https://crdb-settings.distributedbites.com
 
-TODO
-
-
+REST API:
+* View settings by release endpoint: https://crdb-settings-api.distributedbites.com/settings/release/v23.1.22
+* Compare release settings endpoint: https://crdb-settings-api.distributedbites.com/settings/release/v23.1.22..v23.2.7
