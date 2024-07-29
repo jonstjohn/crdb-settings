@@ -33,7 +33,7 @@ func Execute() {
 
 func init() {
 
-	rootCmd.PersistentFlags().StringVar(&urlArg, "url", "", "Database URL")
+	rootCmd.PersistentFlags().StringVar(&urlArg, "url", os.Getenv("CRDB_SETTINGS_URL"), "Database URL")
 	rootCmd.MarkFlagRequired("url")
 
 	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
