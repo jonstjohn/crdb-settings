@@ -6,9 +6,9 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var updateCmd = &cobra.Command{
-	Use:   "save",
-	Short: "Releases save command",
+var releasesUpdateCmd = &cobra.Command{
+	Use:   "update",
+	Short: "Update db releases from remote yaml",
 	Run: func(cmd *cobra.Command, args []string) {
 		pool, err := dbpgx.NewPoolFromUrl(urlArg)
 		if err != nil {
@@ -22,5 +22,5 @@ var updateCmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.AddCommand(updateCmd)
+	releasesCmd.AddCommand(releasesUpdateCmd)
 }

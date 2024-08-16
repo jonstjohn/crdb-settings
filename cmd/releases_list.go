@@ -11,7 +11,7 @@ import (
 var releasesListCmdSourceArg string
 
 var releasesListCmd = &cobra.Command{
-	Use:   "releases list",
+	Use:   "list",
 	Short: "Releases list command",
 	Run: func(cmd *cobra.Command, args []string) {
 		if releasesListCmdSourceArg == "db" {
@@ -46,6 +46,6 @@ var releasesListCmd = &cobra.Command{
 
 func init() {
 	releasesListCmd.Flags().StringVar(&releasesListCmdSourceArg, "source", "db", "Source for releases list command - 'yaml' or 'db'")
-	rootCmd.AddCommand(releasesListCmd)
+	releasesCmd.AddCommand(releasesListCmd)
 
 }
