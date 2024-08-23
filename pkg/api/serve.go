@@ -3,6 +3,7 @@ package api
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/jonstjohn/crdb-settings/pkg/releases"
 	"github.com/jonstjohn/crdb-settings/pkg/settings"
 	"net/http"
 	"regexp"
@@ -12,6 +13,7 @@ var (
 	SettingsReleaseReWithRelease  = regexp.MustCompile(`^/settings/release/(.+)$`)
 	SettingsCompareReWithReleases = regexp.MustCompile(`^/settings/compare/(.+)\.\.(.+)$`)
 	SettingsHistoryReWithSetting  = regexp.MustCompile(`^/settings/history/(.+)$`)
+	ReleasesRe                    = regexp.MustCompile(`^/releases/list$`)
 )
 
 func Serve(url string) {
@@ -123,6 +125,27 @@ func (h *SettingsHandler) ListSettingsForRelease(w http.ResponseWriter, r *http.
 	w.Write(jsonBytes)
 }
 
+func (h *SettingsHandler) ListReleases(w http.ResponseWriter, r *http.Request) {
+	rm, err := releases.NewReleasesManager(h.Url)
+	if err != nil {
+		ErrorHandler(w, err)
+		return
+	}
+	releases, err := rm.GetReleases()
+	if err != nil {
+		ErrorHandler(w, err)
+		return
+	}
+	jsonBytes, err := json.Marshal(releases)
+	if err != nil {
+		ErrorHandler(w, err)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.WriteHeader(http.StatusOK)
+	w.Write(jsonBytes)
+}
+
 func ErrorHandler(w http.ResponseWriter, err error) {
 	w.WriteHeader(http.StatusBadGateway) // TODO
 	w.Write([]byte(fmt.Sprintf("%v", err)))
@@ -141,6 +164,8 @@ func (h *SettingsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	case r.Method == http.MethodGet && SettingsHistoryReWithSetting.MatchString(r.URL.Path):
 		h.HistoryForSetting(w, r)
 		return
+	case r.Method == http.MethodGet && ReleasesRe.MatchString(r.URL.Path):
+		h.ListReleases(w, r)
 	default:
 		w.WriteHeader(http.StatusNotFound)
 		return

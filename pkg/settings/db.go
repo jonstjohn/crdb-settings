@@ -9,6 +9,7 @@ import (
 )
 
 type Db struct {
+	Url  string
 	Pool *pgxpool.Pool
 }
 
@@ -168,6 +169,7 @@ func NewDbDatasource(url string) (*Db, error) {
 		return nil, err
 	}
 	return &Db{
+		Url:  url,
 		Pool: pool,
 	}, nil
 }

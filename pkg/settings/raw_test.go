@@ -1,9 +1,9 @@
 package settings
 
 import (
-	"blatta/pkg/releases"
 	"bufio"
 	"fmt"
+	"github.com/jonstjohn/crdb-settings/pkg/releases"
 	"github.com/stretchr/testify/assert"
 	"os"
 	"strconv"

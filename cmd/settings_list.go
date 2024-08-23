@@ -30,24 +30,6 @@ var settingsListCmd = &cobra.Command{
 		}
 		fmt.Println(string(b))
 
-		/*
-
-			pool, err := dbpgx.NewPoolFromUrl(urlArg)
-			if err != nil {
-				panic(err)
-			}
-			s := settings.NewDbDatasource(pool)
-			releases, err := s.GetRawSettingsForVersion(listSettingsVersionFlag)
-			if err != nil {
-				panic(err)
-			}
-			b, err := json.MarshalIndent(releases, "", "  ")
-			if err != nil {
-				panic(err)
-			}
-			fmt.Println(string(b))
-
-		*/
 	},
 }
 

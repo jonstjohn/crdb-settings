@@ -1,7 +1,6 @@
 package releases
 
 import (
-	"github.com/jackc/pgx/v5/pgxpool"
 	"slices"
 	"time"
 )
@@ -80,17 +79,6 @@ func (r *Release) CompareVersion(r2 *Release) int {
 		return 1
 	}
 	return 1
-}
-
-func UpdateReleases(pool *pgxpool.Pool) error {
-
-	remote := NewRemoteDataSource()
-	db := NewDbDatasource(pool)
-	releasesFromRemote, err := remote.GetReleases()
-	if err != nil {
-		return err
-	}
-	return db.SaveReleases(releasesFromRemote)
 }
 
 func (rs *Releases) SortBy(sort SortBy) {

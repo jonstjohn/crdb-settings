@@ -172,8 +172,12 @@ func SummarizeAndSaveSettings(url string) error {
 		return err
 	}
 
-	relDs := releases.NewDbDatasource(rsDs.Pool)
-	rels, err := relDs.GetReleases()
+	rm, err := releases.NewReleasesManager(url)
+	if err != nil {
+		return err
+	}
+
+	rels, err := rm.GetReleases()
 	if err != nil {
 		return err
 	}

@@ -3,7 +3,6 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/jonstjohn/crdb-settings/pkg/dbpgx"
 	"github.com/jonstjohn/crdb-settings/pkg/releases"
 	"github.com/spf13/cobra"
 )
@@ -15,11 +14,10 @@ var releasesListCmd = &cobra.Command{
 	Short: "Releases list command",
 	Run: func(cmd *cobra.Command, args []string) {
 		if releasesListCmdSourceArg == "db" {
-			pool, err := dbpgx.NewPoolFromUrl(urlArg)
+			rp, err := releases.NewDbDatasource(urlArg)
 			if err != nil {
 				panic(err)
 			}
-			rp := releases.NewDbDatasource(pool)
 			releases, err := rp.GetReleases()
 			if err != nil {
 				panic(err)

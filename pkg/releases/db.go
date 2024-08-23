@@ -3,15 +3,24 @@ package releases
 import (
 	"context"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/jonstjohn/crdb-settings/pkg/dbpgx"
 	"time"
 )
 
 type Db struct {
+	Url  string
 	Pool *pgxpool.Pool
 }
 
-func NewDbDatasource(pool *pgxpool.Pool) *Db {
-	return &Db{Pool: pool}
+func NewDbDatasource(url string) (*Db, error) {
+	pool, err := dbpgx.NewPoolFromUrl(url)
+	if err != nil {
+		return nil, err
+	}
+	return &Db{
+		Url:  url,
+		Pool: pool,
+	}, nil
 }
 
 // GetReleases gets releases from the database pool connection
@@ -135,7 +144,7 @@ SELECT
 	beta_rc_version
 FROM
 	releases
-ORDER BY major ASC, minor ASC, patch ASC, beta_rc ASC, beta_rc_version ASC
+ORDER BY major DESC, minor DESC, patch DESC, beta_rc = '' DESC, beta_rc DESC, beta_rc_version DESC
 `
 
 const UPSERT = `

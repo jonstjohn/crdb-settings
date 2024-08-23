@@ -111,8 +111,11 @@ func (sm *Manager) getReleasesNames(release string) ([]string, error) {
 				return nil, err
 			}
 		}
-		rdb := releases.NewDbDatasource(sm.Db.Pool) // TODO
-		return rdb.GetRecentReleaseNames(cnt)
+		rm, err := releases.NewReleasesManager(sm.Db.Url)
+		if err != nil {
+			return nil, err
+		}
+		return rm.GetRecentReleaseNames(cnt)
 	} else {
 		return []string{release}, nil
 	}
