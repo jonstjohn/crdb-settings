@@ -1,0 +1,5 @@
+dispatch:
+  - url: "api.distributedbites.com/*"
+    service: api
+  - url: "distributedbites.com/*"
+    service: default
