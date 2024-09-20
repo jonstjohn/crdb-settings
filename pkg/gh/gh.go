@@ -12,8 +12,8 @@ type Issue struct {
 	Number    int
 	Title     string
 	Url       string
-	CreatedAt time.Time
-	ClosedAt  time.Time
+	CreatedAt *time.Time
+	ClosedAt  *time.Time
 }
 
 type Provider struct {
@@ -43,9 +43,13 @@ func (p *Provider) SearchIssues(srch string) ([]Issue, error) {
 
 	// TODO - handle more than one page of results
 	for _, i := range result.Issues {
+		var closedAt *time.Time
+		if i.ClosedAt != nil {
+			closedAt = i.ClosedAt.GetTime()
+		}
 		issues = append(issues,
 			Issue{Title: *i.Title, Url: *i.HTMLURL,
-				ID: *i.ID, Number: *i.Number, CreatedAt: *i.CreatedAt.GetTime(), ClosedAt: *i.ClosedAt.GetTime()})
+				ID: *i.ID, Number: *i.Number, CreatedAt: i.CreatedAt.GetTime(), ClosedAt: closedAt})
 	}
 	return issues, nil
 }

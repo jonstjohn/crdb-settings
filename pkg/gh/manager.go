@@ -22,8 +22,29 @@ func NewManager(accessToken *string, url string) (*Manager, error) {
 	return &Manager{Provider: provider, Db: db}, err
 }
 
-func (m *Manager) GetIssuesForSetting(setting string) ([]Issue, error) {
+func (m *Manager) SearchIssuesForSetting(setting string) ([]Issue, error) {
 	return m.Provider.SearchIssues(setting)
+}
+
+func (m *Manager) GetIssuesForSetting(setting string) ([]Issue, error) {
+	rows, err := m.Db.GetIssuesForSetting(setting)
+	if err != nil {
+		return nil, err
+	}
+
+	issues := make([]Issue, len(rows))
+	for i, row := range rows {
+		issues[i] = Issue{
+			ID:        row.Id,
+			Number:    row.Number,
+			Title:     row.Title,
+			Url:       row.Url,
+			CreatedAt: row.Created,
+			ClosedAt:  row.Closed,
+		}
+
+	}
+	return issues, nil
 }
 
 func (m *Manager) UpdateIssuesForSetting(setting string) error {
@@ -52,7 +73,7 @@ func (m *Manager) UpdateIssuesForSetting(setting string) error {
 
 		logrus.Info(fmt.Sprintf("Processing setting '%s'", s))
 
-		issues, err := m.GetIssuesForSetting(s)
+		issues, err := m.SearchIssuesForSetting(s)
 		if err != nil {
 			return err
 		}

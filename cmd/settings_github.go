@@ -16,10 +16,12 @@ var settingsGithubCmd = &cobra.Command{
 		if err != nil {
 			panic(err)
 		}
+		//issues, err := m.GetIssuesForSetting(githubCmdAccessTokenFlag)
 		err = m.UpdateIssuesForSetting(githubSettingFlag)
 		if err != nil {
 			panic(err)
 		}
+		//fmt.Println(issues)
 	},
 }
 
