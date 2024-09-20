@@ -13,6 +13,7 @@ var (
 	SettingsReleaseReWithRelease  = regexp.MustCompile(`^/settings/release/(.+)$`)
 	SettingsCompareReWithReleases = regexp.MustCompile(`^/settings/compare/(.+)\.\.(.+)$`)
 	SettingsHistoryReWithSetting  = regexp.MustCompile(`^/settings/history/(.+)$`)
+	SettingsDetailReWithSetting   = regexp.MustCompile(`^/settings/detail/(.+)$`)
 	ReleasesRe                    = regexp.MustCompile(`^/releases/list$`)
 )
 
@@ -146,6 +147,39 @@ func (h *SettingsHandler) ListReleases(w http.ResponseWriter, r *http.Request) {
 	w.Write(jsonBytes)
 }
 
+func (h *SettingsHandler) SettingDetail(w http.ResponseWriter, r *http.Request) {
+	matches := SettingsDetailReWithSetting.FindStringSubmatch(r.URL.Path)
+	if len(matches) != 2 {
+		w.WriteHeader(http.StatusOK) // TODO
+		w.Write([]byte("Release must be included"))
+		return
+	}
+	setting := matches[1]
+
+	sm, err := settings.NewSettingsManager(h.Url)
+	if err != nil {
+		ErrorHandler(w, err)
+		return
+	}
+	s, err := sm.GetSettingDetail(setting)
+	if err != nil {
+		ErrorHandler(w, err)
+		return
+	}
+	jsonBytes, err := json.Marshal(s)
+	if err != nil {
+		ErrorHandler(w, err)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.WriteHeader(http.StatusOK)
+	_, err = w.Write(jsonBytes)
+	if err != nil {
+		ErrorHandler(w, err)
+		return
+	}
+}
+
 func ErrorHandler(w http.ResponseWriter, err error) {
 	w.WriteHeader(http.StatusBadGateway) // TODO
 	w.Write([]byte(fmt.Sprintf("%v", err)))
@@ -166,6 +200,8 @@ func (h *SettingsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	case r.Method == http.MethodGet && ReleasesRe.MatchString(r.URL.Path):
 		h.ListReleases(w, r)
+	case r.Method == http.MethodGet && SettingsDetailReWithSetting.MatchString(r.URL.Path):
+		h.SettingDetail(w, r)
 	default:
 		w.WriteHeader(http.StatusNotFound)
 		return

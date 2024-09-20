@@ -130,7 +130,7 @@ func (s *SqlExecutor) CreateRawTable() error {
 func (s *SqlExecutor) UpsertRawSetting(r RawSetting) error {
 	_, err := s.Pool.Exec(context.Background(), UpsertRaw,
 		r.ReleaseName, r.Cpu, r.MemoryBytes,
-		r.Variable, r.Value, r.Type,
+		r.Name, r.Value, r.Type,
 		r.Public, r.Description, r.DefaultValue,
 		r.Origin, r.Key,
 	)
@@ -187,7 +187,7 @@ func (s *SqlExecutor) GetSettingsRawOrderedByVersion() ([]RawSetting, error) {
 			ReleaseName:  releaseName,
 			Cpu:          cpu,
 			MemoryBytes:  memoryBytes,
-			Variable:     variable,
+			Name:     variable,
 			Value:        value,
 			Type:         typ,
 			Public:       public,
@@ -209,7 +209,7 @@ func (s *SqlExecutor) UpsertSummary(summary Summary) error {
 		return err
 	}
 	_, err = s.Pool.Exec(context.Background(), UpsertSummarySql,
-		summary.Variable, summary.Value, summary.Type,
+		summary.Name, summary.Value, summary.Type,
 		summary.Public, summary.Description, summary.DefaultValue,
 		summary.Origin, summary.Key, summary.FirstReleases,
 		summary.LastReleases, valueChangesB, descriptionChangesB)

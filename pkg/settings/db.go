@@ -15,7 +15,7 @@ type Db struct {
 
 /*
 type SettingsSummaryRow struct {
-	Variable           string
+	Name           string
 	Value              string
 	Type               string
 	Public             bool
@@ -293,7 +293,7 @@ func (db *Db) GetSettingSummaries() (settings.Summaries, error) {
 			ReleaseName:  releaseName,
 			Cpu:          cpu,
 			MemoryBytes:  memoryBytes,
-			Variable:     variable,
+			Name:     variable,
 			Value:        value,
 			Type:         typ,
 			Public:       public,
@@ -376,6 +376,56 @@ func (db *Db) upsertSummary(summary Summary) error {
 		summary.Origin, summary.Key, summary.FirstReleases,
 		summary.LastReleases, valueChangesB, descriptionChangesB)
 	return err
+}
+
+func (db *Db) GetReleaseNamesForSetting(setting string) ([]string, error) {
+	sql := `
+SELECT rs.release_name
+FROM settings_raw rs INNER JOIN releases r ON rs.release_name = r.name
+WHERE rs.variable = $1
+GROUP BY rs.release_name, r.major, r.minor, r.patch, r.beta_rc, r.beta_rc_version
+ORDER BY major DESC, minor DESC, patch DESC, beta_rc DESC, beta_rc_version DESC
+`
+	rows, err := db.Pool.Query(context.Background(), sql, setting)
+	if err != nil {
+		return nil, err
+	}
+
+	var releaseNames []string
+
+	for rows.Next() {
+		var releaseName string
+		err := rows.Scan(&releaseName)
+		if err != nil {
+			return nil, err
+		}
+		releaseNames = append(releaseNames, releaseName)
+	}
+	return releaseNames, nil
+}
+
+func (db *Db) GetRecentDescriptionForSetting(setting string) (string, error) {
+	sql := `
+SELECT rs.description
+FROM settings_raw rs INNER JOIN releases r ON rs.release_name = r.name
+WHERE rs.variable = $1
+ORDER BY major DESC, minor DESC, patch DESC
+LIMIT 1
+`
+	rows, err := db.Pool.Query(context.Background(), sql, setting)
+	if err != nil {
+		return "", err
+	}
+
+	var description string
+
+	for rows.Next() {
+		err := rows.Scan(&description)
+		if err != nil {
+			return "", err
+		}
+	}
+	return description, nil
 }
 
 /*

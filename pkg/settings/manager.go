@@ -2,6 +2,7 @@ package settings
 
 import (
 	"fmt"
+	"github.com/jonstjohn/crdb-settings/pkg/gh"
 	"github.com/jonstjohn/crdb-settings/pkg/host"
 	"github.com/jonstjohn/crdb-settings/pkg/releases"
 	"github.com/sirupsen/logrus"
@@ -138,4 +139,45 @@ func (sm *Manager) CompareSettingsForReleases(r1 string, r2 string) (ComparedRel
 
 func (sm *Manager) HistoryForSetting(setting string) (SettingHistory, error) {
 	return GenerateSettingHistory(ReleaseSettings{})
+}
+
+func (sm *Manager) GetSettingDetail(setting string) (Detail, error) {
+
+	d := Detail{Name: setting}
+
+	// Get recent description
+	desc, err := sm.Db.GetRecentDescriptionForSetting(setting)
+	if err != nil {
+		return d, err
+	}
+	d.Description = desc
+
+	// Add list of releases
+	names, err := sm.Db.GetReleaseNamesForSetting(setting)
+	if err != nil {
+		return d, err
+	}
+	d.ReleaseNames = names
+
+	// Add Github issues
+	ghm, err := gh.NewManager(nil, sm.Db.Url)
+	if err != nil {
+		return d, err
+	}
+
+	issues, err := ghm.GetIssuesForSetting(setting)
+	if err != nil {
+		return d, err
+	}
+
+	for _, issue := range issues {
+		d.Issues = append(d.Issues,
+			Issue{
+				Id: issue.ID, Number: issue.Number, Title: issue.Title, Url: issue.Url,
+				Created: issue.CreatedAt, Closed: issue.ClosedAt,
+			},
+		)
+	}
+
+	return d, nil
 }
