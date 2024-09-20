@@ -69,7 +69,7 @@ func (db *Db) GetOldestSettingStrings(cnt int) ([]string, error) {
 
 func (db *Db) GetIssuesForSetting(setting string) ([]SettingsGithubIssuesRow, error) {
 	sql := "SELECT variable, id, number, title, url, processed, closed, created FROM settings_github_issues WHERE variable = $1" +
-		"ORDER BY closed DESC"
+		"ORDER BY created DESC"
 	rows, err := db.Pool.Query(context.Background(), sql, setting)
 	if err != nil {
 		return nil, err
