@@ -20,15 +20,19 @@ type RawRow struct {
 	Updated     time.Time
 }
 
+const CreateDatabase = `
+CREATE DATABASE IF NOT EXISTS blatta
+`
+
 const CreateRawTable = `
-CREATE TABLE IF NOT EXISTS metrics_raw (
+CREATE TABLE IF NOT EXISTS blatta.metrics_raw (
     release_name string,
 	metric STRING NOT NULL,
 	type STRING NOT NULL,
 	help STRING NOT NULL,
 	updated TIMESTAMP NOT NULL DEFAULT now(),
 	PRIMARY KEY (release_name, metric),
-	INDEX (variable, release_name)
+	INDEX (metric, release_name)
 )
 `
 
@@ -38,7 +42,7 @@ type SaveRunsRow struct {
 }
 
 const CreateSaveRunsTable = `
-CREATE TABLE IF NOT EXISTS metrics_save_runs (
+CREATE TABLE IF NOT EXISTS blatta.metrics_save_runs (
     release_name string,
 	updated TIMESTAMP NOT NULL DEFAULT now(),
 	PRIMARY KEY (release_name)
@@ -46,23 +50,23 @@ CREATE TABLE IF NOT EXISTS metrics_save_runs (
 `
 
 const UpsertRaw = `
-UPSERT INTO metrics_raw (release_name, metric, type, help) VALUES ($1, $2, $3, $4)
+UPSERT INTO blatta.metrics_raw (release_name, metric, type, help) VALUES ($1, $2, $3, $4)
 `
 
 const UpsertSaveRun = `
-UPSERT INTO metrics_save_runs (release_name) VALUES ($1, $2)
+UPSERT INTO blatta.metrics_save_runs (release_name) VALUES ($1)
 `
 
 const SelectMetricsForReleaseSql = `
 SELECT release_name, metric, type, help, updated
-FROM metrics_raw 
+FROM blatta.metrics_raw 
 WHERE release_name = $1
 ORDER BY metric ASC
 `
 
 const SelectSaveRunsForReleaseSql = `
 SELECT release_name, updated
-FROM metrics_save_runs
+FROM blatta.metrics_save_runs
 WHERE release_name = $1
 `
 
@@ -77,6 +81,23 @@ func NewDbDatasource(url string) (*Db, error) {
 	}, nil
 }
 
+func (db *Db) Initialize() error {
+	err := db.createDatabaseIfNotExists()
+	if err != nil {
+		return err
+	}
+	err = db.createRawTableIfNotExists()
+	if err != nil {
+		return err
+	}
+	return db.createSaveRunsTableIfNotExists()
+}
+
+func (db *Db) createDatabaseIfNotExists() error {
+	_, err := db.Pool.Exec(context.Background(), CreateDatabase)
+	return err
+}
+
 func (db *Db) createRawTableIfNotExists() error {
 	_, err := db.Pool.Exec(context.Background(), CreateRawTable)
 	return err
@@ -87,14 +108,14 @@ func (db *Db) createSaveRunsTableIfNotExists() error {
 	return err
 }
 
-func (db *Db) UpsertRaw(releaseName, metric Metric) error {
+func (db *Db) UpsertRaw(releaseName string, metric Metric) error {
 	_, err := db.Pool.Exec(context.Background(), UpsertRaw,
 		releaseName, metric.Name, metric.Type, metric.Help,
 	)
 	return err
 }
 
-func (db *Db) UpsertSaveRun(releaseName, metric Metric) error {
+func (db *Db) UpsertSaveRun(releaseName string) error {
 	_, err := db.Pool.Exec(context.Background(), UpsertSaveRun, releaseName)
 	return err
 }

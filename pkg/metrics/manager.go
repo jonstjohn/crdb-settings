@@ -24,12 +24,7 @@ func NewManager(url string) (*Manager, error) {
 }
 
 func (m *Manager) InitializeDatabase() error {
-	err := m.Db.createRawTableIfNotExists()
-	if err != nil {
-		return err
-	}
-	err = m.Db.createSaveRunsTableIfNotExists()
-	return err
+	return m.Db.Initialize()
 }
 
 func (m *Manager) GetMetricsForRelease(releaseName string) ([]Metric, error) {
@@ -45,14 +40,12 @@ func (m *Manager) GetMetricsForRelease(releaseName string) ([]Metric, error) {
 	return ms, err
 }
 
-func (m *Manager) SaveClusterSettingsForRelease(releaseName string) error {
+func (m *Manager) SaveMetricsForRelease(releaseName string) error {
 	rs, err := m.getReleasesNames(releaseName)
 	if err != nil {
 		return err
 	}
 	logrus.Info(fmt.Sprintf("Found %d releases that are candidate for updating", len(rs)))
-
-	cm := crdbcluster.NewManager()
 
 	// Iterate over releases
 	for _, r := range rs {
@@ -65,22 +58,66 @@ func (m *Manager) SaveClusterSettingsForRelease(releaseName string) error {
 			continue
 		}
 
-		// Start test server
-		err := cm.StartTestCluster(r)
+		metrics, err := m.GetMetricsFromClusterForRelease(releaseName)
 		if err != nil {
 			return err
 		}
 
-		// Next, get the metrics for the release TODO
+		// Upsert
+		for _, metric := range metrics {
+			err := m.Db.UpsertRaw(releaseName, metric)
+			if err != nil {
+				return err
+			}
+		}
 
-		// Save it
-
-		// Cleanup test server
-		err = cm.CleanupTestCluster()
+		err = m.Db.UpsertSaveRun(releaseName)
 		if err != nil {
 			return err
 		}
+
 	}
+
+	return nil
+}
+
+func (m *Manager) GetMetrics(releaseName string) ([]Metric, error) {
+	rows, err := m.Db.SelectRaw(releaseName)
+	if err != nil {
+		return nil, err
+	}
+
+	ms := make([]Metric, 0)
+	for _, row := range rows {
+		ms = append(ms, Metric{Name: row.Metric, Help: row.Help, Type: Type(row.Type)})
+	}
+
+	return ms, nil
+
+}
+
+func (m *Manager) GetMetricsFromClusterForRelease(releaseName string) ([]Metric, error) {
+
+	cm := crdbcluster.NewManager()
+
+	err := cm.StartTestCluster(releaseName)
+	if err != nil {
+		return nil, err
+	}
+
+	output, err := cm.GetMetricsEndpointOutput()
+	if err != nil {
+		return nil, err
+	}
+
+	metrics := FromText(string(output))
+
+	err = cm.CleanupTestCluster()
+	if err != nil {
+		return nil, err
+	}
+
+	return metrics, nil
 }
 
 func (m *Manager) getReleasesNames(release string) ([]string, error) {

@@ -3,6 +3,7 @@ package metrics
 import (
 	"bufio"
 	"fmt"
+	"sort"
 	"strings"
 )
 
@@ -39,6 +40,10 @@ func FromText(text string) Metrics {
 			section = append(section, line)
 		}
 	}
+
+	sort.Slice(metrics, func(i, j int) bool {
+		return metrics[i].Name < metrics[j].Name
+	})
 
 	return metrics
 }
