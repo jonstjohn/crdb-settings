@@ -3,6 +3,7 @@ package api
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/jonstjohn/crdb-settings/pkg/metrics"
 	"github.com/jonstjohn/crdb-settings/pkg/releases"
 	"github.com/jonstjohn/crdb-settings/pkg/settings"
 	"net/http"
@@ -15,18 +16,16 @@ var (
 	SettingsHistoryReWithSetting  = regexp.MustCompile(`^/settings/history/(.+)$`)
 	SettingsDetailReWithSetting   = regexp.MustCompile(`^/settings/detail/(.+)$`)
 	ReleasesRe                    = regexp.MustCompile(`^/releases/list$`)
+	MetricsReleaseReWithRelease   = regexp.MustCompile(`^/metrics/release/(.+)$`)
+	MetricsCompareReWithReleases  = regexp.MustCompile(`^/metrics/compare/(.+)\.\.(.+)$`)
+	MetricsHistoryReWithSetting   = regexp.MustCompile(`^/metrics/history/(.+)$`)
+	MetricsDetailReWithSetting    = regexp.MustCompile(`^/metrics/detail/(.+)$`)
 )
 
 func Serve(url string) {
 	mux := http.NewServeMux()
 	mux.Handle("/", &SettingsHandler{Url: url})
 	http.ListenAndServe(":8080", mux)
-}
-
-type homeHandler struct{}
-
-func (h *homeHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("This is my home page"))
 }
 
 type SettingsHandler struct {
@@ -180,6 +179,36 @@ func (h *SettingsHandler) SettingDetail(w http.ResponseWriter, r *http.Request) 
 	}
 }
 
+func (h *SettingsHandler) ListMetricsForRelease(w http.ResponseWriter, r *http.Request) {
+	matches := MetricsReleaseReWithRelease.FindStringSubmatch(r.URL.Path)
+	if len(matches) != 2 {
+		w.WriteHeader(http.StatusOK) // TODO
+		w.Write([]byte("Release must be included"))
+		return
+	}
+	release := matches[1]
+
+	m, err := metrics.NewManager(h.Url)
+	if err != nil {
+		ErrorHandler(w, err)
+		return
+	}
+
+	metrics, err := m.GetMetricsForRelease(release)
+	if err != nil {
+		ErrorHandler(w, err)
+		return
+	}
+	jsonBytes, err := json.Marshal(metrics)
+	if err != nil {
+		ErrorHandler(w, err)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.WriteHeader(http.StatusOK)
+	w.Write(jsonBytes)
+}
+
 func ErrorHandler(w http.ResponseWriter, err error) {
 	w.WriteHeader(http.StatusBadGateway) // TODO
 	w.Write([]byte(fmt.Sprintf("%v", err)))
@@ -202,6 +231,8 @@ func (h *SettingsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		h.ListReleases(w, r)
 	case r.Method == http.MethodGet && SettingsDetailReWithSetting.MatchString(r.URL.Path):
 		h.SettingDetail(w, r)
+	case r.Method == http.MethodGet && MetricsReleaseReWithRelease.MatchString(r.URL.Path):
+		h.ListMetricsForRelease(w, r)
 	default:
 		w.WriteHeader(http.StatusNotFound)
 		return

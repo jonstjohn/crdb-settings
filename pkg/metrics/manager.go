@@ -58,20 +58,20 @@ func (m *Manager) SaveMetricsForRelease(releaseName string) error {
 			continue
 		}
 
-		metrics, err := m.GetMetricsFromClusterForRelease(releaseName)
+		metrics, err := m.GenerateMetricsForRelease(r)
 		if err != nil {
 			return err
 		}
 
 		// Upsert
 		for _, metric := range metrics {
-			err := m.Db.UpsertRaw(releaseName, metric)
+			err := m.Db.UpsertRaw(r, metric)
 			if err != nil {
 				return err
 			}
 		}
 
-		err = m.Db.UpsertSaveRun(releaseName)
+		err = m.Db.UpsertSaveRun(r)
 		if err != nil {
 			return err
 		}
@@ -96,7 +96,7 @@ func (m *Manager) GetMetrics(releaseName string) ([]Metric, error) {
 
 }
 
-func (m *Manager) GetMetricsFromClusterForRelease(releaseName string) ([]Metric, error) {
+func (m *Manager) GenerateMetricsForRelease(releaseName string) ([]Metric, error) {
 
 	cm := crdbcluster.NewManager()
 

@@ -10,7 +10,7 @@ func TestManager_GetMetricsFromClusterForRelease(t *testing.T) {
 	m, err := NewManager("")
 	assert.NoError(t, err)
 
-	metrics, err := m.GetMetricsFromClusterForRelease("v23.2.10")
+	metrics, err := m.GenerateMetricsForRelease("v23.2.10")
 	assert.NoError(t, err)
 
 	assert.Equal(t, 1578, len(metrics))
