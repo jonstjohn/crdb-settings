@@ -120,6 +120,20 @@ func (m *Manager) GenerateMetricsForRelease(releaseName string) ([]Metric, error
 	return metrics, nil
 }
 
+func (m *Manager) CompareMetricsForReleases(r1 string, r2 string) (ComparedReleaseMetrics, error) {
+	r1metrics, err := m.GetMetricsForRelease(r1)
+	if err != nil {
+		return ComparedReleaseMetrics{}, err
+	}
+
+	r2metrics, err := m.GetMetricsForRelease(r2)
+	if err != nil {
+		return ComparedReleaseMetrics{}, err
+	}
+
+	return CompareReleaseMetrics(r1, r1metrics, r2, r2metrics), nil
+}
+
 func (m *Manager) getReleasesNames(release string) ([]string, error) {
 	if release == "all" || strings.HasPrefix(release, "recent-") {
 		cnt := math.MaxInt

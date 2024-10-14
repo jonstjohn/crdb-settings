@@ -18,8 +18,8 @@ var (
 	ReleasesRe                    = regexp.MustCompile(`^/releases/list$`)
 	MetricsReleaseReWithRelease   = regexp.MustCompile(`^/metrics/release/(.+)$`)
 	MetricsCompareReWithReleases  = regexp.MustCompile(`^/metrics/compare/(.+)\.\.(.+)$`)
-	MetricsHistoryReWithSetting   = regexp.MustCompile(`^/metrics/history/(.+)$`)
-	MetricsDetailReWithSetting    = regexp.MustCompile(`^/metrics/detail/(.+)$`)
+	//	MetricsHistoryReWithSetting   = regexp.MustCompile(`^/metrics/history/(.+)$`)
+	//	MetricsDetailReWithSetting    = regexp.MustCompile(`^/metrics/detail/(.+)$`)
 )
 
 func Serve(url string) {
@@ -194,12 +194,12 @@ func (h *SettingsHandler) ListMetricsForRelease(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	metrics, err := m.GetMetricsForRelease(release)
+	ms, err := m.GetMetricsForRelease(release)
 	if err != nil {
 		ErrorHandler(w, err)
 		return
 	}
-	jsonBytes, err := json.Marshal(metrics)
+	jsonBytes, err := json.Marshal(ms)
 	if err != nil {
 		ErrorHandler(w, err)
 		return
@@ -207,6 +207,38 @@ func (h *SettingsHandler) ListMetricsForRelease(w http.ResponseWriter, r *http.R
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
 	w.Write(jsonBytes)
+}
+
+func (h *SettingsHandler) CompareMetricsForReleases(w http.ResponseWriter, r *http.Request) {
+	matches := MetricsCompareReWithReleases.FindStringSubmatch(r.URL.Path)
+	if len(matches) != 3 {
+		w.WriteHeader(http.StatusOK) // TODO
+		w.Write([]byte("Release must be included"))
+		return
+	}
+	r1 := matches[1]
+	r2 := matches[2]
+
+	m, err := metrics.NewManager(h.Url)
+	if err != nil {
+		ErrorHandler(w, err)
+		return
+	}
+
+	s, err := m.CompareMetricsForReleases(r1, r2)
+	if err != nil {
+		ErrorHandler(w, err)
+		return
+	}
+	jsonBytes, err := json.Marshal(s)
+	if err != nil {
+		ErrorHandler(w, err)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.WriteHeader(http.StatusOK)
+	w.Write(jsonBytes)
+
 }
 
 func ErrorHandler(w http.ResponseWriter, err error) {
@@ -233,6 +265,8 @@ func (h *SettingsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		h.SettingDetail(w, r)
 	case r.Method == http.MethodGet && MetricsReleaseReWithRelease.MatchString(r.URL.Path):
 		h.ListMetricsForRelease(w, r)
+	case r.Method == http.MethodGet && MetricsCompareReWithReleases.MatchString(r.URL.Path):
+		h.CompareMetricsForReleases(w, r)
 	default:
 		w.WriteHeader(http.StatusNotFound)
 		return
