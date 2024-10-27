@@ -1,10 +1,12 @@
-# CRDB Settings
+# CRDB Settings (and other things) Tool
 
-This tool provides a way to examine CockroachDB cluster settings for specific releases or across
-multiple releases. It provides the following:
+This tool was originally designed to provide a way to examine CockroachDB cluster settings for specific releases or across
+multiple releases. However, it was recently modified to also support querying metrics. In the future, it may be renamed or split into different repositories.
 
-1. Discover new versions of CockroachDB and store default cluster settings
-2. Serve a REST API for examining settings
+It provides the following:
+
+1. Discover new versions of CockroachDB and store default cluster settings and metrics
+2. Serve a REST API for examining settings and metrics
 
 ## Command-line
 
@@ -38,22 +40,38 @@ List settings for a specific version:
 ./crdb-settings settings list [version] --url $DBURL
 ```
 
-Compare settings across 2 versions:
+Show settings details:
 
 ```
-./crdb-settings settings compare [version1] [version2] --url $DBURL
+./crdb-settings settings detail --setting [setting] --url $DBURL
+```
+
+Find Github issues related to a setting:
+
+```
+./crdb-settings settings github --setting [setting] --url $DBURL
+```
+
+### Metrics
+
+Update metrics stored in database (by default, start with most recent release and go backwards):
+
+```
+./crdb-settings metrics update --url $DBURL
 ```
 
 ## REST API
 
 The REST API is defined via an OpenAPI spec and can be served via a web server.
 
-### OpenAPI Spec
-
 The following operations are supported:
 
 1. `/settings/release/[release]`
 2. `/settings/compare/[release1]..[release2]`
+3. `/settings/detail/[setting]`
+4. `/metrics/release/[release]`
+5. `/metrics/compare/[release1]..[release2]`
+
 
 ### REST web server
 
@@ -79,8 +97,8 @@ The current deployment uses Google Cloud Build to automatically deploy on push (
 
 To access the tool without needing to do any installation, the REST API and a web application is exposed via public URLs.
 
-Web application: https://crdb-settings.distributedbites.com
+Web application: https://distributedbites.com
 
 REST API:
-* View settings by release endpoint: https://crdb-settings-api.distributedbites.com/settings/release/v23.1.22
-* Compare release settings endpoint: https://crdb-settings-api.distributedbites.com/settings/release/v23.1.22..v23.2.7
+* View settings by release endpoint: https://api.distributedbites.com/settings/release/v23.1.22
+* Compare release settings endpoint: https://api.distributedbites.com/settings/release/v23.1.22..v23.2.7
