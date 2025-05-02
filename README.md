@@ -101,4 +101,5 @@ Web application: https://distributedbites.com
 
 REST API:
 * View settings by release endpoint: https://api.distributedbites.com/settings/release/v23.1.22
-* Compare release settings endpoint: https://api.distributedbites.com/settings/release/v23.1.22..v23.2.7
+* Compare release settings endpoint: https://api.distributedbites.com/settings/compare/v23.1.22..v23.2.7
+
