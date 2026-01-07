@@ -57,8 +57,17 @@ Find Github issues related to a setting:
 Update metrics stored in database (by default, start with most recent release and go backwards):
 
 ```
-./crdb-settings metrics update --url $DBURL
+./crdb-settings metrics update --url $DBURL --release=recent-50
 ```
+
+### Github
+
+Update settings from Github mentions:
+
+```
+./crdb-settings settings github --url $DBURL
+```
+
 
 ## REST API
 

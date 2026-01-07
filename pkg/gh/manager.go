@@ -2,10 +2,13 @@ package gh
 
 import (
 	"fmt"
-	"github.com/sirupsen/logrus"
 	"math"
 	"strconv"
 	"strings"
+	"time"
+
+	"github.com/google/go-github/v65/github"
+	"github.com/sirupsen/logrus"
 )
 
 type Manager struct {
@@ -69,14 +72,42 @@ func (m *Manager) UpdateIssuesForSetting(setting string) error {
 		settings = append(settings, setting)
 	}
 
-	for _, s := range settings {
+	// Rate limiter: 10 requests per minute = 1 request every 6 seconds
+	rateLimiter := time.NewTicker(6 * time.Second)
+	defer rateLimiter.Stop()
+
+	for i, s := range settings {
+
+		// Wait for rate limiter, except for the first request
+		if i > 0 {
+			<-rateLimiter.C
+		}
 
 		logrus.Info(fmt.Sprintf("Processing setting '%s'", s))
 
 		issues, err := m.SearchIssuesForSetting(s)
 		if err != nil {
-			return err
+			// Check if it's a rate limit error
+			if rateLimitErr, ok := err.(*github.RateLimitError); ok {
+				// Calculate wait time until rate limit resets
+				waitDuration := time.Until(rateLimitErr.Rate.Reset.Time)
+				// Add a small buffer (1 second) to ensure the limit has reset
+				waitDuration += time.Second
+
+				logrus.Warnf("Rate limit exceeded, waiting %v until reset at %v",
+					waitDuration.Round(time.Second), rateLimitErr.Rate.Reset.Time)
+				time.Sleep(waitDuration)
+
+				// Retry the request
+				issues, err = m.SearchIssuesForSetting(s)
+				if err != nil {
+					return err
+				}
+			} else {
+				return err
+			}
 		}
+
 		for _, i := range issues {
 			err := m.Db.SaveSettingIssue(s, i)
 			if err != nil {
