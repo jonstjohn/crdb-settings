@@ -23,5 +23,5 @@ var metricsUpdateCmd = &cobra.Command{
 
 func init() {
 	metricsCmd.AddCommand(metricsUpdateCmd)
-	metricsUpdateCmd.Flags().StringVarP(&updateMetricsCmdReleaseFlag, "release", "r", "", "Release name")
+	metricsUpdateCmd.Flags().StringVarP(&updateMetricsCmdReleaseFlag, "release", "r", "recent-10", "Release name (use 'all' or 'recent-N' for multiple)")
 }
