@@ -57,7 +57,7 @@ Find Github issues related to a setting:
 Update metrics stored in database (by default, start with most recent release and go backwards):
 
 ```
-./crdb-settings metrics update --url $DBURL --release=recent-50
+./crdb-settings metrics update --url $DBURL --release=recent-10
 ```
 
 ### Github
@@ -101,6 +101,46 @@ gcloud app deploy --project $PROJECT
 App engine must have access to the secret `CRDB_SETTINGS_DBURL` in the project.
 
 The current deployment uses Google Cloud Build to automatically deploy on push (dev) or tag (prod).
+
+### Building and pushing a new Docker image
+
+The Cloud Run jobs run the binary as a Docker image stored in Artifact Registry. When the code changes, rebuild and push the image using Cloud Build:
+
+```
+gcloud builds submit \
+  --project=$PROJECT \
+  --region=us-central1 \
+  --config=cloudbuild-new.yaml \
+  .
+```
+
+After a successful build, update all three Cloud Run jobs to the new image digest:
+
+```
+gcloud run jobs update crdb-settings --project=$PROJECT --region=us-central1 --image=$NEW_IMAGE
+gcloud run jobs update crdb-settings-metrics-update --project=$PROJECT --region=us-central1 --image=$NEW_IMAGE
+gcloud run jobs update crdb-settings-update-releases --project=$PROJECT --region=us-central1 --image=$NEW_IMAGE
+```
+
+### Scheduled jobs
+
+Data is kept up to date via three Cloud Run jobs triggered nightly by Cloud Scheduler (all times UTC, project `distributed-bites-dev`, region `us-central1`):
+
+| Time | Cloud Scheduler job | Cloud Run job | Command |
+|------|--------------------|---------------------------------|---------|
+| 2:00 AM | `crdb-settings-update-releases-scheduler-trigger` | `crdb-settings-update-releases` | `releases update` |
+| 3:00 AM | `crdb-settings-scheduler-trigger` | `crdb-settings` | `settings update --release recent-5` |
+| 4:00 AM | `crdb-settings-metrics-update-scheduler-trigger` | `crdb-settings-metrics-update` | `metrics update --release recent-5` |
+
+To trigger a one-time run of any job manually:
+
+```
+gcloud scheduler jobs run crdb-settings-metrics-update-scheduler-trigger \
+  --project=$PROJECT \
+  --location=us-central1
+```
+
+The database URL is injected at runtime via the `CRDB_SETTINGS_DBURL` secret in Secret Manager.
 
 ## Public Access
 
