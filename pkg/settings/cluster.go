@@ -22,11 +22,14 @@ type ClusterSetting struct {
 
 const ColCountSql = "SELECT count(*) FROM information_schema.columns WHERE table_name = 'cluster_settings' AND table_schema = 'crdb_internal'"
 
-// GetLocalClusterSettings gets settings from the local cluster. It is necessary to run it on one of the cluster nodes,
-// either using a regular cluster or a testing cluster, since we also capture CPU and memory information from the
-// cluster. Because columns have been added to crdb_internal.cluster_settings over time, this dynamically determines
-// what columns to cpature data from and uses nil or default value for the rest
+// GetLocalClusterSettings gets settings from the local cluster. Because columns have been added to
+// crdb_internal.cluster_settings over time, this dynamically determines what columns to capture data
+// from and uses nil or default value for the rest.
 func GetLocalClusterSettings(pool *pgxpool.Pool) ([]ClusterSetting, error) {
+	// Required for CockroachDB v26+ which restricts access to crdb_internal by default.
+	// Older versions don't recognize this parameter, so ignore unrecognized parameter errors.
+	pool.Exec(context.Background(), "SET allow_unsafe_internals = true")
+
 	var cnt int
 	pool.QueryRow(context.Background(), ColCountSql).Scan(&cnt)
 
@@ -38,7 +41,7 @@ func GetLocalClusterSettings(pool *pgxpool.Pool) ([]ClusterSetting, error) {
 	columns := []string{"variable", "value", "type", "public", "description", "default_value", "origin", "key"}
 
 	sql := fmt.Sprintf("SELECT %s FROM crdb_internal.cluster_settings", strings.Join(columns[0:cnt], ","))
-	rows, err := pool.Query(context.Background(), sql) // , targets[0:cnt]...)
+	rows, err := pool.Query(context.Background(), sql)
 	if err != nil {
 		return nil, err
 	}

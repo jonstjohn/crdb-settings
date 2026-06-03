@@ -45,7 +45,8 @@ func (sm *Manager) GetSettingsForRelease(version string) (ReleaseSettings, error
 
 // SaveClusterSettingsForVersion saves all the cluster settings for a specific CRDB version, but only
 // if the combination of release, cpu and memory has not been previously run - otherwise it bails early.
-func (sm *Manager) SaveClusterSettingsForVersion(release string, url string) error {
+// Set force=true to bypass the save-run check and re-capture settings even if they were previously recorded.
+func (sm *Manager) SaveClusterSettingsForVersion(release string, url string, force bool) error {
 
 	// Get host memory and CPU
 	cpu := host.GetCpu()
@@ -64,19 +65,25 @@ func (sm *Manager) SaveClusterSettingsForVersion(release string, url string) err
 	for _, r := range rs {
 
 		// Check to see if save run already exists, if it does, bail early - we've already captured the settings
-		exists, err := sm.Db.SaveRunExists(r, cpu, memoryBytes) // TODO
-		if err != nil {
-			return err
-		}
-		if exists {
-			logrus.Info(fmt.Sprintf("Save run already exists for '%s' with cpu/memory %d/%d", r, cpu, memoryBytes))
-			continue
+		if !force {
+			exists, err := sm.Db.SaveRunExists(r, cpu, memoryBytes)
+			if err != nil {
+				return err
+			}
+			if exists {
+				logrus.Info(fmt.Sprintf("Save run already exists for '%s' with cpu/memory %d/%d", r, cpu, memoryBytes))
+				continue
+			}
 		}
 
 		// Get the cluster settings for this release
 		settings, err := ClusterSettingsFromRelease(r)
 		if err != nil {
 			return err
+		}
+		if len(settings) == 0 {
+			logrus.Warn(fmt.Sprintf("No settings returned for '%s', skipping save run record", r))
+			continue
 		}
 		rawSettings := make([]RawSetting, len(settings))
 
@@ -85,13 +92,13 @@ func (sm *Manager) SaveClusterSettingsForVersion(release string, url string) err
 			rawSettings[i] = *NewRawSetting(r, cpu, memoryBytes, s)
 		}
 
-		err = sm.Db.SaveRawSettings(rawSettings) // TODO
+		err = sm.Db.SaveRawSettings(rawSettings)
 		if err != nil {
 			return err
 		}
 
 		// Save the save run so we don't have to re-run later
-		err = sm.Db.SaveRun(r, cpu, memoryBytes) // TODO
+		err = sm.Db.SaveRun(r, cpu, memoryBytes)
 		if err != nil {
 			return err
 		}

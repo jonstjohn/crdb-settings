@@ -33,7 +33,7 @@ func ClusterSettingsFromRelease(release string) ([]ClusterSetting, error) {
 	if err != nil {
 		return nil, err
 	}
-	settings, err := GetLocalClusterSettings(pool)
+	settings, settingsErr := GetLocalClusterSettings(pool)
 
 	t.Stop()
 
@@ -48,7 +48,7 @@ func ClusterSettingsFromRelease(release string) ([]ClusterSetting, error) {
 		}
 	}
 
-	return settings, err
+	return settings, settingsErr
 }
 
 /*

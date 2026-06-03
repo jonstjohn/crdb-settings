@@ -6,6 +6,7 @@ import (
 )
 
 var saveSettingsReleaseFlag string
+var saveSettingsForceFlag bool
 
 var settingsUpdateCmd = &cobra.Command{
 	Use:   "update",
@@ -15,7 +16,7 @@ var settingsUpdateCmd = &cobra.Command{
 		if err != nil {
 			panic(err)
 		}
-		err = s.SaveClusterSettingsForVersion(saveSettingsReleaseFlag, urlArg)
+		err = s.SaveClusterSettingsForVersion(saveSettingsReleaseFlag, urlArg, saveSettingsForceFlag)
 		if err != nil {
 			panic(err)
 		}
@@ -32,4 +33,5 @@ var settingsUpdateCmd = &cobra.Command{
 func init() {
 	settingsCmd.AddCommand(settingsUpdateCmd)
 	settingsUpdateCmd.Flags().StringVar(&saveSettingsReleaseFlag, "release", "all", "Update all or specify a single CRDB release, starting with 'v'")
+	settingsUpdateCmd.Flags().BoolVar(&saveSettingsForceFlag, "force", false, "Re-capture settings even if a save run record already exists")
 }
