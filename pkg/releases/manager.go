@@ -38,13 +38,13 @@ func (rm *Manager) GetReleases() (Releases, error) {
 	return rels, nil
 }
 
-func (rm *Manager) UpdateReleases() error {
+func (rm *Manager) UpdateReleases() (int, error) {
 	remote := NewRemoteDataSource()
 	releasesFromRemote, err := remote.GetReleases()
 	if err != nil {
-		return err
+		return 0, err
 	}
-	return rm.Db.SaveReleases(releasesFromRemote)
+	return len(releasesFromRemote), rm.Db.SaveReleases(releasesFromRemote)
 }
 
 func (rm *Manager) GetRecentReleaseNames(cnt int) ([]string, error) {

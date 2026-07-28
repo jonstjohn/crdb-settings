@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"github.com/jonstjohn/crdb-settings/pkg/releases"
 	"github.com/spf13/cobra"
 )
@@ -13,10 +14,11 @@ var releasesUpdateCmd = &cobra.Command{
 		if err != nil {
 			panic(err)
 		}
-		err = rm.UpdateReleases()
+		cnt, err := rm.UpdateReleases()
 		if err != nil {
 			panic(err)
 		}
+		fmt.Printf("Updated %d releases from remote YAML\n", cnt)
 	},
 }
 
